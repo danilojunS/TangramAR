@@ -11,6 +11,8 @@ public class Figure {
      */
     public String name;
     public ArrayList<double[]> piecesCoordinates;
+    // The id of the piece at the center of the figure (where we will render the 3D model)
+    public int centerPiece;
 
     // We shall have a list of all figures we can create to display in the first menu
     static ArrayList<Figure> allFigures = new ArrayList<Figure>();

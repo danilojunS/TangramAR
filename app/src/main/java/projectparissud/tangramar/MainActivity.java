@@ -8,6 +8,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+
 import edu.dhbw.andar.ARToolkit;
 import edu.dhbw.andar.AndARActivity;
 import edu.dhbw.andar.exceptions.AndARException;
@@ -34,11 +39,13 @@ public class MainActivity extends AndARActivity {
             artoolkit = super.getArtoolkit();
 
             // reference marker
-            refMarker = new PieceMarker("reference", "android.patt", 76.0, new double[]{0,0});
-            artoolkit.registerARObject(refMarker);
+            //refMarker = new PieceMarker("reference", "android.patt", 76.0, new double[]{0,0});
+            //artoolkit.registerARObject(refMarker);
             // another marker
-            hiroMarker = new PieceMarker("test", "patt.hiro", 80.0, new double[]{0,0}, refMarker);
-            artoolkit.registerARObject(hiroMarker);
+            //hiroMarker = new PieceMarker("test", "patt.hiro", 80.0, new double[]{0,0}, refMarker);
+            //artoolkit.registerARObject(hiroMarker);
+
+            artoolkit.registerARObject(loadObject("android"));
 
 
         } catch (AndARException ex){
@@ -77,5 +84,31 @@ public class MainActivity extends AndARActivity {
             default :
                 return super.onTouchEvent(event);
         }
+    }
+
+    public Model3D loadObject(String name){
+        String modelFileName = name + ".obj";
+        BaseFileUtil fileUtil= null;
+        File modelFile=null;
+        fileUtil = new AssetsFileUtil(getResources().getAssets());
+        fileUtil.setBaseFolder("models/");
+
+        //read the model file:
+        ObjParser parser = new ObjParser(fileUtil);
+        if(fileUtil != null) {
+            BufferedReader fileReader = fileUtil.getReaderFromName(modelFileName);
+            if(fileReader != null) {
+                Model model;
+                try {
+                    model = parser.parse("Model", fileReader);
+                    return new Model3D(model);
+                } catch (IOException e) {
+                    //e.printStackTrace();
+                } catch (ParseException e){
+                    //
+                }
+            }
+        }
+        return null;
     }
 }
