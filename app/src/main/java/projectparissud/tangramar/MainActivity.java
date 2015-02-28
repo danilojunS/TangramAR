@@ -23,7 +23,7 @@ public class MainActivity extends AndARActivity {
     PieceMarker refMarker;
 
     // Init the tangram object and the pieces
-    Tangram tangram = new Tangram();
+    //Tangram tangram = new Tangram();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
