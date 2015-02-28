@@ -63,6 +63,10 @@ public class PieceMarker extends ARObject {
         this.correctPoseInReferenceCS = this.getPoseInReferenceCS();
     }
 
+    public void setCorrectPoseInReferenceCS(double[] coordinates){
+        this.correctPoseInReferenceCS = coordinates;
+    }
+
     private void updateCorrectPose() {
         // Verify if the current pose (in oldPoseInReferenceCS) is the correct pose
         // Trying to compare each coordinate of the transformation matrix of the correct pose and the current pose

@@ -6,15 +6,15 @@ package projectparissud.tangramar;
 public class TangramPiece {
     public String name;
     public PieceMarker marker; // Marker referring to this piece
+    static double MARKER_WIDTH = 80.;
 
     // Constructor
-    public TangramPiece(String _name){
+    // When we create a new piece, we specify its name and the position it should have in the reference
+    public TangramPiece(String _name, double[] _coordinates)
+    {
         name = _name;
+        marker = new PieceMarker(name, "TODO:ReplaceByPatternName", MARKER_WIDTH, new double[]{0, 0});
+        marker.setCorrectPoseInReferenceCS(_coordinates);
     }
 
-    // Methods needed
-    /*
-    // Check if the piece is near the position in argument
-    public boolean isCorrect(double[2] position);
-     */
 }
