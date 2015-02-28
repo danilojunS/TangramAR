@@ -10,6 +10,8 @@ public class Tangram {
     public ArrayList<TangramPiece> pieces;
     // We should have a list of figures
     public Figure target;
+
+    public static final int NUMBER_OF_PIECES = 7;
     // A figure would be a list of 7 coordinates (x,y), one for each piece
 
     // Constructor
@@ -18,13 +20,38 @@ public class Tangram {
 
         // Create the pieces
         pieces = new ArrayList<TangramPiece>();
-        pieces.add(new TangramPiece("Big Triangle 1", target.piecesCoordinates.get(0)));
-        pieces.add(new TangramPiece("Big Triangle 2", target.piecesCoordinates.get(1)));
-        pieces.add(new TangramPiece("Medium Triangle", target.piecesCoordinates.get(2)));
-        pieces.add(new TangramPiece("Small Triangle 1", target.piecesCoordinates.get(3)));
-        pieces.add(new TangramPiece("Small Triangle 2", target.piecesCoordinates.get(4)));
-        pieces.add(new TangramPiece("Square", target.piecesCoordinates.get(5)));
-        pieces.add(new TangramPiece("Parallelogram", target.piecesCoordinates.get(6)));
+        for(int i = 0; i < NUMBER_OF_PIECES; i++){
+
+            pieces.add(new TangramPiece(intToPieceName(i), target.piecesCoordinates.get(i), i == target.centerPiece));
+        }
     }
 
+    public boolean match(){
+        ArrayList<double[]> coordinates = new ArrayList<double[]>();
+        for(TangramPiece piece : pieces){
+            coordinates.add(piece.marker.getPoseInReferenceCS());
+        }
+        return target.match(coordinates);
+    }
+
+    public static String intToPieceName(int id){
+        switch(id){
+            case 0:
+                return "BigTriangle1";
+            case 1:
+                return "BigTriangle2";
+            case 2:
+                return "MediumTriangle";
+            case 3:
+                return "SmallTriangle1";
+            case 4:
+                return "SmallTriangle2";
+            case 5:
+                return "Square";
+            case 6:
+                return "Parallelogram";
+            default:
+                return "Unknown";
+        }
+    }
 }

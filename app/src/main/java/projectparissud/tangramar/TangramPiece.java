@@ -10,10 +10,10 @@ public class TangramPiece {
 
     // Constructor
     // When we create a new piece, we specify its name and the position it should have in the reference
-    public TangramPiece(String _name, double[] _coordinates)
+    public TangramPiece(String _name, double[] _coordinates, boolean isCenter)
     {
         name = _name;
-        marker = new PieceMarker(name, "TODO:ReplaceByPatternName", MARKER_WIDTH, new double[]{0, 0});
+        marker = new PieceMarker(name, name + ".patt", MARKER_WIDTH, new double[]{0, 0});
         marker.setCorrectPoseInReferenceCS(_coordinates);
     }
 

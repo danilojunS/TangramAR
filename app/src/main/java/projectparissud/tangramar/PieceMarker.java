@@ -45,7 +45,7 @@ public class PieceMarker extends ARObject {
     }
 
     // get the pose of the marker in the Reference Coordinate System
-    private double[] getPoseInReferenceCS() {
+    public double[] getPoseInReferenceCS() {
         // calculate the pose only if the reference is visible (it is in the scene)
         if (this.reference.isVisible()) {
             // I think this is the right way to do it, I saw it in the code of the Pong game
@@ -112,7 +112,6 @@ public class PieceMarker extends ARObject {
         /**
          * Everything drawn here will be drawn directly onto the marker,
          * as the corresponding translation matrix will already be applied.
-         */
         super.draw(gl);
 
         SimpleBox box = new SimpleBox();
@@ -141,6 +140,7 @@ public class PieceMarker extends ARObject {
 
         //draw the box
         box.draw(gl);
+        */
     }
     @Override
     public void init(GL10 gl) {

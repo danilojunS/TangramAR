@@ -32,10 +32,21 @@ public class Figure {
         }
     }
 
-    public boolean match(ArrayList<double[]> _coordinates){
+    public boolean match(ArrayList<double[]> _piecesCoordinates){
+        double distance = 0;
+        int i = 0;
         for(double[] coordinates : piecesCoordinates){
+            double[] _coordinates = _piecesCoordinates.get(i);
             // compare coordinates and _coordinates (should be nearly the same for (x,y) and (rotation matrix))
+            // WARNING : we can exchange the two big triangles and the two small triangles !
+            // i.e. we should try to exchange _piecesCoordinates.get(0)/_piecesCoordinates.get(1) and _piecesCoordinates.get(3)/_piecesCoordinates.get(4)
+            double x_diff = Math.abs(_coordinates[0] - coordinates[0]);
+            double y_diff = Math.abs(_coordinates[1] - coordinates[1]);
+            distance += Math.sqrt(x_diff * x_diff + y_diff * y_diff);
+            i++;
         }
-        return false;
+        distance = distance / _piecesCoordinates.size(); // Mean of the distances
+        // TODO : adjust this value
+        return distance < 50.;
     }
 }
