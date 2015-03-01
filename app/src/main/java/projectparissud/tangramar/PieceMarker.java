@@ -34,6 +34,8 @@ public class PieceMarker extends ARObject {
     private double[] oldPoseInReferenceCS;          // previous value of the marker's pose in the reference Coordinate System
     private double[] correctPoseInReferenceCS;      // value of the desired marker's pose in the reference Coordinates System. This will be defined according to the figure we want to make in the Tangram
 
+    public String tmpName;
+
     private Model model;
     private Group[] texturedGroups;
     private Group[] nonTexturedGroups;
@@ -47,6 +49,8 @@ public class PieceMarker extends ARObject {
         this.reference = this;          // if we don't specify a reference marker, it adopts itself as reference
         this.isCorrectPose = false;     // the marker does not start in the correct pose...
         this.display = _display;
+
+        this.tmpName = name;
 
         this.model = _model;
         if(display) {
@@ -135,6 +139,64 @@ public class PieceMarker extends ARObject {
      */
     @Override
     public final void draw(GL10 gl) {
+        SimpleBox box = new SimpleBox();
+        FloatBuffer mat_flash;
+        FloatBuffer mat_ambient;
+        FloatBuffer mat_flash_shiny;
+        FloatBuffer mat_diffuse;
+        float mat_ambientf[] = {0f, 1.0f, 0f, 1.0f};
+        float mat_flashf[] = {0f, 1.0f, 0f, 1.0f};
+        float mat_diffusef[] = {0f, 1.0f, 0f, 1.0f};
+        float mat_flash_shinyf[] = {50.0f};
+
+        mat_ambient = GraphicsUtil.makeFloatBuffer(mat_ambientf);
+        mat_flash = GraphicsUtil.makeFloatBuffer(mat_flashf);
+        mat_flash_shiny = GraphicsUtil.makeFloatBuffer(mat_flash_shinyf);
+        mat_diffuse = GraphicsUtil.makeFloatBuffer(mat_diffusef);
+
+        gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_SPECULAR,mat_flash);
+        gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_SHININESS, mat_flash_shiny);
+        gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_DIFFUSE, mat_diffuse);
+        gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_AMBIENT, mat_ambient);
+
+        //draw cube
+        switch(tmpName) {
+            case "BigTriangle1":
+                // Red
+                gl.glColor4f(1.0f, 0, 0, 1.0f);
+                break;
+            case "BigTriangle2":
+                // Green
+                gl.glColor4f(0, 1.0f, 0, 1.0f);
+                break;
+            case "MediumTriangle":
+                // Blue
+                gl.glColor4f(0, 0, 1.0f, 1.0f);
+                break;
+            case "SmallTriangle1":
+                // Yellow
+                gl.glColor4f(1.0f, 1.0f, 0, 1.0f);
+                break;
+            case "SmallTriangle2":
+                // Purple
+                gl.glColor4f(1.0f, 0, 1.0f, 1.0f);
+                break;
+            case "Parallelogram":
+                // White
+                gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+                break;
+            case  "Square":
+                // Black
+                gl.glColor4f(0, 0, 0, 1.0f);
+                break;
+            default:
+
+        }
+        gl.glTranslatef( 0.0f, 0.0f, 12.5f );
+
+        //draw the box
+        box.draw(gl);
+
         if (this != this.reference) {
             this.oldPoseInReferenceCS = this.getPoseInReferenceCS();
             //this.updateCorrectPose();
