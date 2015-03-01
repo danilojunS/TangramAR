@@ -19,6 +19,7 @@ public class PieceMarker extends ARObject {
     // we need to find good values for this two constants...
     static final double MIN_DIST = 100.0;           // if a distance is smaller than this value, we consider that the marker has moved
     static final double POSE_DIST = 50.0;          // used to verify if the current pose is the same as the correct pose
+    static final double POSE_TOLERANCE = 50.0;
 
     private boolean isCorrectPose;                  // variable to say if the current pose is the desired pose
 
@@ -45,6 +46,7 @@ public class PieceMarker extends ARObject {
 
     public void setReference(PieceMarker reference) {
         this.reference = reference;
+        this.isCorrectPose = true;
     }
 
     // get the pose of the marker in the Reference Coordinate System
@@ -79,14 +81,26 @@ public class PieceMarker extends ARObject {
         // Trying to compare each coordinate of the transformation matrix of the correct pose and the current pose
         // In other words, it verifies if the array oldPoseInReferenceCS is sufficiently close to correctPoseInReferenceCS
         // PS: I don't know which value to put in the POSE_DIST in a way to optmize this :(
-        for (int i = 0; i < this.oldPoseInReferenceCS.length; i++) {
-            if (Math.abs(this.oldPoseInReferenceCS[i] - this.correctPoseInReferenceCS[i]) > POSE_DIST) {
-                // if two corresponding coordinates are too different, the current pose is not the correct pose
-                this.isCorrectPose = false;
-                return;
-            }
+//        for (int i = 0; i < this.oldPoseInReferenceCS.length; i++) {
+//            if (Math.abs(this.oldPoseInReferenceCS[i] - this.correctPoseInReferenceCS[i]) > POSE_DIST) {
+//                // if two corresponding coordinates are too different, the current pose is not the correct pose
+//                this.isCorrectPose = false;
+//                return;
+//            }
+//        }
+//        this.isCorrectPose = true;
+
+        DistanceMeasure distance = new EuclideanDistance();
+        if (distance.compute(this.oldPoseInReferenceCS, this.correctPoseInReferenceCS) < POSE_TOLERANCE) {
+            this.isCorrectPose = true;
+        } else {
+            this.isCorrectPose = false;
         }
-        this.isCorrectPose = true;
+
+    }
+
+    public boolean isCorrectPose() {
+        return this.isCorrectPose;
     }
 
     /**
@@ -99,17 +113,19 @@ public class PieceMarker extends ARObject {
 //        System.out.println("Hiro Marker !");
         if(this.display) {
             if (this != this.reference) {
-                double[] poseInReferenceCS = this.getPoseInReferenceCS();
-                DistanceMeasure distance = new EuclideanDistance();
-                // only perform tasks if the current pose has sufficiently changed, compared to the previous pose
-                if (distance.compute(poseInReferenceCS, this.oldPoseInReferenceCS) > MIN_DIST) {
-                    System.out.println("Pose changed !");
-                    this.oldPoseInReferenceCS = poseInReferenceCS; // update old pose
-                    this.updateCorrectPose(); // verify if the current pose is the correct pose
-                    if (this.isCorrectPose) {
-                        System.out.println("Correct pose !");
-                    }
-                }
+//                double[] poseInReferenceCS = this.getPoseInReferenceCS();
+//                DistanceMeasure distance = new EuclideanDistance();
+//                // only perform tasks if the current pose has sufficiently changed, compared to the previous pose
+//                if (distance.compute(poseInReferenceCS, this.oldPoseInReferenceCS) > MIN_DIST) {
+////                    System.out.println("Pose changed !");
+//                    this.oldPoseInReferenceCS = poseInReferenceCS; // update old pose
+//                    this.updateCorrectPose(); // verify if the current pose is the correct pose
+////                    if (this.isCorrectPose) {
+////                        System.out.println("Correct pose !");
+////                    }
+//                }
+                this.oldPoseInReferenceCS = this.getPoseInReferenceCS();
+                this.updateCorrectPose();
             }
 
             /**
