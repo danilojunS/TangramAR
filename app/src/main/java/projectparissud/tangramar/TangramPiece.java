@@ -1,5 +1,7 @@
 package projectparissud.tangramar;
 
+import android.util.Log;
+
 /**
  * Created by altay on 27/02/15.
  */
@@ -15,6 +17,7 @@ public class TangramPiece {
         name = _name;
         marker = new PieceMarker(name, _pattern, MARKER_WIDTH, new double[]{0, 0}, isCenter, _model);
         marker.setCorrectPoseInReferenceCS(_coordinates);
+        Log.e("NEW PIECE", name);
     }
 
 }

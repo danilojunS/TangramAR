@@ -20,6 +20,8 @@ public class Tangram {
     public static final int NUMBER_OF_PIECES = 7;
     // A figure would be a list of 7 coordinates (x,y), one for each piece
 
+    private PieceMarker reference;
+
     // Constructor
     public Tangram(){
         target = null;
@@ -31,10 +33,10 @@ public class Tangram {
             pieces.add(new TangramPiece(intToPieceName(i), null, false, intToPatternName(i), null));
         }
 
-        PieceMarker square = pieces.get(6).marker;
+        reference = pieces.get(6).marker;
 
         for(TangramPiece piece : pieces){
-            piece.marker.setReference(square);
+            piece.marker.setReference(reference);
         }
     }
 
@@ -117,5 +119,14 @@ public class Tangram {
         for(TangramPiece piece : pieces){
             artoolkit.registerARObject(piece.marker);
         }
+    }
+
+    public boolean isCorrectFigure() {
+        boolean isCorrectFigure = true;
+
+        for(TangramPiece piece : pieces) {
+            isCorrectFigure = isCorrectFigure && piece.marker.isCorrectPose();
+        }
+        return isCorrectFigure;
     }
 }

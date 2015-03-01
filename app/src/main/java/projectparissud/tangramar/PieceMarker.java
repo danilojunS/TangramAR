@@ -24,6 +24,7 @@ public class PieceMarker extends ARObject {
     // we need to find good values for this two constants...
     static final double MIN_DIST = 100.0;           // if a distance is smaller than this value, we consider that the marker has moved
     static final double POSE_DIST = 50.0;          // used to verify if the current pose is the same as the correct pose
+    static final double POSE_TOLERANCE = 50.0;
 
     private boolean isCorrectPose;                  // variable to say if the current pose is the desired pose
 
@@ -33,6 +34,11 @@ public class PieceMarker extends ARObject {
     private double[] oldPoseInReferenceCS;          // previous value of the marker's pose in the reference Coordinate System
     private double[] correctPoseInReferenceCS;      // value of the desired marker's pose in the reference Coordinates System. This will be defined according to the figure we want to make in the Tangram
 
+    private Model model;
+    private Group[] texturedGroups;
+    private Group[] nonTexturedGroups;
+    private HashMap<Material, Integer> textureIDs = new HashMap<Material, Integer>();
+
     // Constructors
     public PieceMarker(String name, String patternName, double markerWidth, double[] markerCenter, boolean _display, Model _model) {
         super(name, patternName, markerWidth, markerCenter);
@@ -41,22 +47,25 @@ public class PieceMarker extends ARObject {
         this.reference = this;          // if we don't specify a reference marker, it adopts itself as reference
         this.isCorrectPose = false;     // the marker does not start in the correct pose...
         this.display = _display;
+
         this.model = _model;
-        model.finalize();
-        //separate texture from non textured groups for performance reasons
-        Vector<Group> groups = model.getGroups();
-        Vector<Group> texturedGroups = new Vector<Group>();
-        Vector<Group> nonTexturedGroups = new Vector<Group>();
-        for (Iterator<Group> iterator = groups.iterator(); iterator.hasNext();) {
-            Group currGroup = iterator.next();
-            if(currGroup.isTextured()) {
-                texturedGroups.add(currGroup);
-            } else {
-                nonTexturedGroups.add(currGroup);
+        if(display) {
+            model.finalize();
+            //separate texture from non textured groups for performance reasons
+            Vector<Group> groups = model.getGroups();
+            Vector<Group> texturedGroups = new Vector<Group>();
+            Vector<Group> nonTexturedGroups = new Vector<Group>();
+            for (Iterator<Group> iterator = groups.iterator(); iterator.hasNext(); ) {
+                Group currGroup = iterator.next();
+                if (currGroup.isTextured()) {
+                    texturedGroups.add(currGroup);
+                } else {
+                    nonTexturedGroups.add(currGroup);
+                }
             }
+            this.texturedGroups = texturedGroups.toArray(new Group[texturedGroups.size()]);
+            this.nonTexturedGroups = nonTexturedGroups.toArray(new Group[nonTexturedGroups.size()]);
         }
-        this.texturedGroups = texturedGroups.toArray(new Group[texturedGroups.size()]);
-        this.nonTexturedGroups = nonTexturedGroups.toArray(new Group[nonTexturedGroups.size()]);
     }
     public PieceMarker(String name, String patternName, double markerWidth, double[] markerCenter, boolean display, Model model,
                        PieceMarker reference) {
@@ -66,6 +75,9 @@ public class PieceMarker extends ARObject {
 
     public void setReference(PieceMarker reference) {
         this.reference = reference;
+        if (this == reference) {
+            this.isCorrectPose = true;
+        }
     }
 
     // get the pose of the marker in the Reference Coordinate System
@@ -100,14 +112,17 @@ public class PieceMarker extends ARObject {
         // Trying to compare each coordinate of the transformation matrix of the correct pose and the current pose
         // In other words, it verifies if the array oldPoseInReferenceCS is sufficiently close to correctPoseInReferenceCS
         // PS: I don't know which value to put in the POSE_DIST in a way to optmize this :(
-        for (int i = 0; i < this.oldPoseInReferenceCS.length; i++) {
-            if (Math.abs(this.oldPoseInReferenceCS[i] - this.correctPoseInReferenceCS[i]) > POSE_DIST) {
-                // if two corresponding coordinates are too different, the current pose is not the correct pose
-                this.isCorrectPose = false;
-                return;
-            }
+        DistanceMeasure distance = new EuclideanDistance();
+        if (distance.compute(this.oldPoseInReferenceCS, this.correctPoseInReferenceCS) < POSE_TOLERANCE) {
+            this.isCorrectPose = true;
+        } else {
+            this.isCorrectPose = false;
         }
-        this.isCorrectPose = true;
+
+    }
+
+    public boolean isCorrectPose() {
+        return this.isCorrectPose;
     }
 
     /**
@@ -116,6 +131,11 @@ public class PieceMarker extends ARObject {
      */
     @Override
     public final void draw(GL10 gl) {
+        if (this != this.reference) {
+            this.oldPoseInReferenceCS = this.getPoseInReferenceCS();
+            //this.updateCorrectPose();
+        }
+
         if(this.display) {
             super.draw(gl);
             //gl = (GL10) GLDebugHelper.wrap(gl, GLDebugHelper.CONFIG_CHECK_GL_ERROR, log);
@@ -154,18 +174,18 @@ public class PieceMarker extends ARObject {
             for (int i = 0; i < cnt; i++) {
                 Group group = texturedGroups[i];
                 Material mat = group.getMaterial();
-                if(mat != null) {
+                if (mat != null) {
                     gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_SPECULAR, mat.specularlight);
                     gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_AMBIENT, mat.ambientlight);
                     gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_DIFFUSE, mat.diffuselight);
                     gl.glMaterialf(GL10.GL_FRONT_AND_BACK, GL10.GL_SHININESS, mat.shininess);
-                    if(mat.hasTexture()) {
-                        gl.glTexCoordPointer(2,GL10.GL_FLOAT, 0, group.texcoords);
+                    if (mat.hasTexture()) {
+                        gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, group.texcoords);
                         gl.glBindTexture(GL10.GL_TEXTURE_2D, textureIDs.get(mat).intValue());
                     }
                 }
-                gl.glVertexPointer(3,GL10.GL_FLOAT, 0, group.vertices);
-                gl.glNormalPointer(GL10.GL_FLOAT,0, group.normals);
+                gl.glVertexPointer(3, GL10.GL_FLOAT, 0, group.vertices);
+                gl.glNormalPointer(GL10.GL_FLOAT, 0, group.normals);
                 gl.glDrawArrays(GL10.GL_TRIANGLES, 0, group.vertexCount);
             }
 
@@ -175,30 +195,25 @@ public class PieceMarker extends ARObject {
         }
     }
 
-    private Model model;
-    private Group[] texturedGroups;
-    private Group[] nonTexturedGroups;
-    private HashMap<Material, Integer> textureIDs = new HashMap<Material, Integer>();
-
     @Override
     public void init(GL10 gl){
-        int[]  tmpTextureID = new int[1];
-        //load textures of every material(that has a texture):
-        Iterator<Material> materialI = model.getMaterials().values().iterator();
-        while (materialI.hasNext()) {
-            Material material = (Material) materialI.next();
-            if(material.hasTexture()) {
-                //load texture
-                gl.glGenTextures(1, tmpTextureID, 0);
-                gl.glBindTexture(GL10.GL_TEXTURE_2D, tmpTextureID[0]);
-                textureIDs.put(material, tmpTextureID[0]);
-                GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, material.getTexture(), 0);
-                material.getTexture().recycle();
-                gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
-                gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+        if(display) {
+            int[]  tmpTextureID = new int[1];
+            //load textures of every material(that has a texture):
+            Iterator<Material> materialI = model.getMaterials().values().iterator();
+            while (materialI.hasNext()) {
+                Material material = (Material) materialI.next();
+                if(material.hasTexture()) {
+                    //load texture
+                    gl.glGenTextures(1, tmpTextureID, 0);
+                    gl.glBindTexture(GL10.GL_TEXTURE_2D, tmpTextureID[0]);
+                    textureIDs.put(material, tmpTextureID[0]);
+                    GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, material.getTexture(), 0);
+                    material.getTexture().recycle();
+                    gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
+                    gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+                }
             }
         }
-
-        //transfer vertices to video memory
     }
 }
