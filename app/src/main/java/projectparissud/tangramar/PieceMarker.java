@@ -1,9 +1,14 @@
 package projectparissud.tangramar;
 
+import android.opengl.GLUtils;
+
 import org.apache.commons.math3.ml.distance.DistanceMeasure;
 import org.apache.commons.math3.ml.distance.EuclideanDistance;
 
 import java.nio.FloatBuffer;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Vector;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -29,17 +34,33 @@ public class PieceMarker extends ARObject {
     private double[] correctPoseInReferenceCS;      // value of the desired marker's pose in the reference Coordinates System. This will be defined according to the figure we want to make in the Tangram
 
     // Constructors
-    public PieceMarker(String name, String patternName, double markerWidth, double[] markerCenter, boolean display) {
+    public PieceMarker(String name, String patternName, double markerWidth, double[] markerCenter, boolean _display, Model _model) {
         super(name, patternName, markerWidth, markerCenter);
         this.oldPoseInReferenceCS = new double[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         this.correctPoseInReferenceCS = new double[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         this.reference = this;          // if we don't specify a reference marker, it adopts itself as reference
         this.isCorrectPose = false;     // the marker does not start in the correct pose...
-        this.display = false;
+        this.display = _display;
+        this.model = _model;
+        model.finalize();
+        //separate texture from non textured groups for performance reasons
+        Vector<Group> groups = model.getGroups();
+        Vector<Group> texturedGroups = new Vector<Group>();
+        Vector<Group> nonTexturedGroups = new Vector<Group>();
+        for (Iterator<Group> iterator = groups.iterator(); iterator.hasNext();) {
+            Group currGroup = iterator.next();
+            if(currGroup.isTextured()) {
+                texturedGroups.add(currGroup);
+            } else {
+                nonTexturedGroups.add(currGroup);
+            }
+        }
+        this.texturedGroups = texturedGroups.toArray(new Group[texturedGroups.size()]);
+        this.nonTexturedGroups = nonTexturedGroups.toArray(new Group[nonTexturedGroups.size()]);
     }
-    public PieceMarker(String name, String patternName, double markerWidth, double[] markerCenter, boolean display,
+    public PieceMarker(String name, String patternName, double markerWidth, double[] markerCenter, boolean display, Model model,
                        PieceMarker reference) {
-        this(name, patternName, markerWidth, markerCenter, display);
+        this(name, patternName, markerWidth, markerCenter, display, model);
         this.reference = reference;
     }
 
@@ -95,58 +116,89 @@ public class PieceMarker extends ARObject {
      */
     @Override
     public final void draw(GL10 gl) {
-
-//        System.out.println("Hiro Marker !");
         if(this.display) {
-            if (this != this.reference) {
-                double[] poseInReferenceCS = this.getPoseInReferenceCS();
-                DistanceMeasure distance = new EuclideanDistance();
-                // only perform tasks if the current pose has sufficiently changed, compared to the previous pose
-                if (distance.compute(poseInReferenceCS, this.oldPoseInReferenceCS) > MIN_DIST) {
-                    System.out.println("Pose changed !");
-                    this.oldPoseInReferenceCS = poseInReferenceCS; // update old pose
-                    this.updateCorrectPose(); // verify if the current pose is the correct pose
-                    if (this.isCorrectPose) {
-                        System.out.println("Correct pose !");
-                    }
+            super.draw(gl);
+            //gl = (GL10) GLDebugHelper.wrap(gl, GLDebugHelper.CONFIG_CHECK_GL_ERROR, log);
+            //do positioning:
+            gl.glScalef(model.scale, model.scale, model.scale);
+            gl.glTranslatef(model.xpos, model.ypos, model.zpos);
+            gl.glRotatef(model.xrot, 1, 0, 0);
+            gl.glRotatef(model.yrot, 0, 1, 0);
+            gl.glRotatef(model.zrot, 0, 0, 1);
+
+            gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
+            gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
+
+            //first draw non textured groups
+            gl.glDisable(GL10.GL_TEXTURE_2D);
+            int cnt = nonTexturedGroups.length;
+            for (int i = 0; i < cnt; i++) {
+                Group group = nonTexturedGroups[i];
+                Material mat = group.getMaterial();
+                if(mat != null) {
+                    gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_SPECULAR, mat.specularlight);
+                    gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_AMBIENT, mat.ambientlight);
+                    gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_DIFFUSE, mat.diffuselight);
+                    gl.glMaterialf(GL10.GL_FRONT_AND_BACK, GL10.GL_SHININESS, mat.shininess);
                 }
+                gl.glVertexPointer(3,GL10.GL_FLOAT, 0, group.vertices);
+                gl.glNormalPointer(GL10.GL_FLOAT,0, group.normals);
+                gl.glDrawArrays(GL10.GL_TRIANGLES, 0, group.vertexCount);
             }
 
-            /**
-             * Everything drawn here will be drawn directly onto the marker,
-             * as the corresponding translation matrix will already be applied.
-             super.draw(gl);
+            //now we can continue with textured ones
+            gl.glEnable(GL10.GL_TEXTURE_2D);
+            gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
 
-             SimpleBox box = new SimpleBox();
-             FloatBuffer mat_flash;
-             FloatBuffer mat_ambient;
-             FloatBuffer mat_flash_shiny;
-             FloatBuffer mat_diffuse;
-             float   mat_ambientf[]     = {0f, 1.0f, 0f, 1.0f};
-             float   mat_flashf[]       = {0f, 1.0f, 0f, 1.0f};
-             float   mat_diffusef[]       = {0f, 1.0f, 0f, 1.0f};
-             float   mat_flash_shinyf[] = {50.0f};
+            cnt = texturedGroups.length;
+            for (int i = 0; i < cnt; i++) {
+                Group group = texturedGroups[i];
+                Material mat = group.getMaterial();
+                if(mat != null) {
+                    gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_SPECULAR, mat.specularlight);
+                    gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_AMBIENT, mat.ambientlight);
+                    gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_DIFFUSE, mat.diffuselight);
+                    gl.glMaterialf(GL10.GL_FRONT_AND_BACK, GL10.GL_SHININESS, mat.shininess);
+                    if(mat.hasTexture()) {
+                        gl.glTexCoordPointer(2,GL10.GL_FLOAT, 0, group.texcoords);
+                        gl.glBindTexture(GL10.GL_TEXTURE_2D, textureIDs.get(mat).intValue());
+                    }
+                }
+                gl.glVertexPointer(3,GL10.GL_FLOAT, 0, group.vertices);
+                gl.glNormalPointer(GL10.GL_FLOAT,0, group.normals);
+                gl.glDrawArrays(GL10.GL_TRIANGLES, 0, group.vertexCount);
+            }
 
-             mat_ambient = GraphicsUtil.makeFloatBuffer(mat_ambientf);
-             mat_flash = GraphicsUtil.makeFloatBuffer(mat_flashf);
-             mat_flash_shiny = GraphicsUtil.makeFloatBuffer(mat_flash_shinyf);
-             mat_diffuse = GraphicsUtil.makeFloatBuffer(mat_diffusef);
-
-             gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_SPECULAR,mat_flash);
-             gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_SHININESS, mat_flash_shiny);
-             gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_DIFFUSE, mat_diffuse);
-             gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_AMBIENT, mat_ambient);
-
-             //draw cube
-             gl.glColor4f(0, 1.0f, 0, 1.0f);
-             gl.glTranslatef( 0.0f, 0.0f, 12.5f );
-
-             //draw the box
-             box.draw(gl);
-             */
+            gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
+            gl.glDisableClientState(GL10.GL_NORMAL_ARRAY);
+            gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
         }
     }
+
+    private Model model;
+    private Group[] texturedGroups;
+    private Group[] nonTexturedGroups;
+    private HashMap<Material, Integer> textureIDs = new HashMap<Material, Integer>();
+
     @Override
-    public void init(GL10 gl) {
+    public void init(GL10 gl){
+        int[]  tmpTextureID = new int[1];
+        //load textures of every material(that has a texture):
+        Iterator<Material> materialI = model.getMaterials().values().iterator();
+        while (materialI.hasNext()) {
+            Material material = (Material) materialI.next();
+            if(material.hasTexture()) {
+                //load texture
+                gl.glGenTextures(1, tmpTextureID, 0);
+                gl.glBindTexture(GL10.GL_TEXTURE_2D, tmpTextureID[0]);
+                textureIDs.put(material, tmpTextureID[0]);
+                GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, material.getTexture(), 0);
+                material.getTexture().recycle();
+                gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
+                gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+            }
+        }
+
+        //transfer vertices to video memory
     }
 }

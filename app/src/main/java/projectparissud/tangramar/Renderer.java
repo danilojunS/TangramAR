@@ -16,18 +16,18 @@ import javax.microedition.khronos.opengles.GL10;
  */
 public class Renderer implements GLSurfaceView.Renderer {
 
-    private final Vector<Model3D> models;
+    private final Vector<PieceMarker> models;
     private final Vector3D cameraPosition = new Vector3D(0, 3, 50);
 
     // FPS stuff
     long frame = 0, time, timebase = 0;
     //end FPS stuff
 
-    public Renderer(Vector<Model3D> models) {
+    public Renderer(Vector<PieceMarker> models) {
         this.models = models;
     }
 
-    public void addModel(Model3D model) {
+    public void addModel(PieceMarker model) {
         if (!models.contains(model)) {
             models.add(model);
         }
@@ -40,8 +40,8 @@ public class Renderer implements GLSurfaceView.Renderer {
         gl.glLoadIdentity();
         GLU.gluLookAt(gl, cameraPosition.x, cameraPosition.y, cameraPosition.z,
                 0, 0, 0, 0, 1, 0);
-        for (Iterator<Model3D> iterator = models.iterator(); iterator.hasNext(); ) {
-            Model3D model = iterator.next();
+        for (Iterator<PieceMarker> iterator = models.iterator(); iterator.hasNext(); ) {
+            PieceMarker model = iterator.next();
             model.draw(gl);
         }
     }
@@ -82,8 +82,8 @@ public class Renderer implements GLSurfaceView.Renderer {
         gl.glEnable(GL10.GL_LIGHT0);
 
         //initialize the models
-        for (Iterator<Model3D> iterator = models.iterator(); iterator.hasNext(); ) {
-            Model3D model = iterator.next();
+        for (Iterator<PieceMarker> iterator = models.iterator(); iterator.hasNext(); ) {
+            PieceMarker model = iterator.next();
             model.init(gl);
         }
 

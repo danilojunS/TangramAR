@@ -28,7 +28,7 @@ public class Tangram {
         pieces = new ArrayList<TangramPiece>();
         for(int i = 0; i < NUMBER_OF_PIECES; i++){
 
-            pieces.add(new TangramPiece(intToPieceName(i), null, false, intToPatternName(i)));
+            pieces.add(new TangramPiece(intToPieceName(i), null, false, intToPatternName(i), null));
         }
 
         PieceMarker square = pieces.get(6).marker;
@@ -44,8 +44,11 @@ public class Tangram {
         // Create the pieces
         pieces = new ArrayList<TangramPiece>();
         for(int i = 0; i < NUMBER_OF_PIECES; i++){
-
-            pieces.add(new TangramPiece(intToPieceName(i), target.piecesCoordinates.get(i), i == target.centerPiece, intToPatternName(i)));
+            Model model = null;
+            if(i == target.centerPiece){
+                // TODO : replace by target.model
+            }
+            pieces.add(new TangramPiece(intToPieceName(i), target.piecesCoordinates.get(i), i == target.centerPiece, intToPatternName(i), model));
         }
     }
 

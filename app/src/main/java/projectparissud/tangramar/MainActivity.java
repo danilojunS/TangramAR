@@ -29,6 +29,7 @@ public class MainActivity extends AndARActivity {
 
     // Init the tangram object and the pieces
     Tangram tangram = new Tangram();
+    // TODO : init tangram figure model with loadObject()
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -87,7 +88,7 @@ public class MainActivity extends AndARActivity {
         }
     }
 
-    public Model3D loadObject(String name){
+    public Model loadObject(String name){
         String modelFileName = name + ".obj";
         BaseFileUtil fileUtil= null;
         File modelFile=null;
@@ -102,7 +103,7 @@ public class MainActivity extends AndARActivity {
                 Model model;
                 try {
                     model = parser.parse("Model", fileReader);
-                    return new Model3D(model);
+                    return model;
                 } catch (IOException e) {
                     //e.printStackTrace();
                 } catch (ParseException e){
