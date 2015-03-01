@@ -125,6 +125,10 @@ public class PieceMarker extends ARObject {
         return this.isCorrectPose;
     }
 
+    public double[] getCurrentPosition() {
+        return this.oldPoseInReferenceCS;
+    }
+
     /**
      * Everything drawn here will be drawn directly onto the marker,
      * as the corresponding translation matrix will already be applied.

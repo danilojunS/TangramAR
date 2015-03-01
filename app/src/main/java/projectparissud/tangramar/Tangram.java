@@ -106,8 +106,9 @@ public class Tangram {
 
     public void printPiecesPositions() {
         for(TangramPiece piece : pieces){
+            Log.e("PIECE", piece.name);
             if(piece.marker.isVisible()) {
-                double[] coordinates = piece.marker.getPoseInReferenceCS();
+                double[] coordinates = piece.marker.getCurrentPosition();
                 String string = piece.name + " : ";
                 string += Arrays.toString(coordinates);
                 Log.e("PIECE POSITION", string);
