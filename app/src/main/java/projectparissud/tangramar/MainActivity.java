@@ -46,7 +46,7 @@ public class MainActivity extends AndARActivity {
             //hiroMarker = new PieceMarker("test", "patt.hiro", 80.0, new double[]{0,0}, refMarker);
             //artoolkit.registerARObject(hiroMarker);
 
-            artoolkit.registerARObject(loadObject("hardcore_chicken"));
+            artoolkit.registerARObject(loadObject("android"));
 
 
         } catch (AndARException ex){

@@ -13,7 +13,7 @@ public class TangramPiece {
     public TangramPiece(String _name, double[] _coordinates, boolean isCenter)
     {
         name = _name;
-        marker = new PieceMarker(name, name + ".patt", MARKER_WIDTH, new double[]{0, 0});
+        marker = new PieceMarker(name, name + ".patt", MARKER_WIDTH, new double[]{0, 0}, isCenter);
         marker.setCorrectPoseInReferenceCS(_coordinates);
     }
 

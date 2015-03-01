@@ -47,9 +47,9 @@ public class Tangram {
             case 4:
                 return "SmallTriangle2";
             case 5:
-                return "Square";
-            case 6:
                 return "Parallelogram";
+            case 6:
+                return "Square";
             default:
                 return "Unknown";
         }

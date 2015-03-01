@@ -22,21 +22,24 @@ public class PieceMarker extends ARObject {
 
     private boolean isCorrectPose;                  // variable to say if the current pose is the desired pose
 
+    private boolean display;                        // do we display the drawing on this marker
+
     private PieceMarker reference;                  // reference marker. The pose of all the other markers will be mesured in the reference Coordinate System
     private double[] oldPoseInReferenceCS;          // previous value of the marker's pose in the reference Coordinate System
     private double[] correctPoseInReferenceCS;      // value of the desired marker's pose in the reference Coordinates System. This will be defined according to the figure we want to make in the Tangram
 
     // Constructors
-    public PieceMarker(String name, String patternName, double markerWidth, double[] markerCenter) {
+    public PieceMarker(String name, String patternName, double markerWidth, double[] markerCenter, boolean display) {
         super(name, patternName, markerWidth, markerCenter);
         this.oldPoseInReferenceCS = new double[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         this.correctPoseInReferenceCS = new double[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         this.reference = this;          // if we don't specify a reference marker, it adopts itself as reference
         this.isCorrectPose = false;     // the marker does not start in the correct pose...
+        this.display = false;
     }
-    public PieceMarker(String name, String patternName, double markerWidth, double[] markerCenter,
+    public PieceMarker(String name, String patternName, double markerWidth, double[] markerCenter, boolean display,
                        PieceMarker reference) {
-        this(name, patternName, markerWidth, markerCenter);
+        this(name, patternName, markerWidth, markerCenter, display);
         this.reference = reference;
     }
 
@@ -94,53 +97,54 @@ public class PieceMarker extends ARObject {
     public final void draw(GL10 gl) {
 
 //        System.out.println("Hiro Marker !");
-
-        if (this != this.reference) {
-            double[] poseInReferenceCS = this.getPoseInReferenceCS();
-            DistanceMeasure distance = new EuclideanDistance();
-            // only perform tasks if the current pose has sufficiently changed, compared to the previous pose
-            if (distance.compute(poseInReferenceCS, this.oldPoseInReferenceCS) > MIN_DIST) {
-                System.out.println("Pose changed !");
-                this.oldPoseInReferenceCS = poseInReferenceCS; // update old pose
-                this.updateCorrectPose(); // verify if the current pose is the correct pose
-                if (this.isCorrectPose) {
-                    System.out.println("Correct pose !");
+        if(this.display) {
+            if (this != this.reference) {
+                double[] poseInReferenceCS = this.getPoseInReferenceCS();
+                DistanceMeasure distance = new EuclideanDistance();
+                // only perform tasks if the current pose has sufficiently changed, compared to the previous pose
+                if (distance.compute(poseInReferenceCS, this.oldPoseInReferenceCS) > MIN_DIST) {
+                    System.out.println("Pose changed !");
+                    this.oldPoseInReferenceCS = poseInReferenceCS; // update old pose
+                    this.updateCorrectPose(); // verify if the current pose is the correct pose
+                    if (this.isCorrectPose) {
+                        System.out.println("Correct pose !");
+                    }
                 }
             }
+
+            /**
+             * Everything drawn here will be drawn directly onto the marker,
+             * as the corresponding translation matrix will already be applied.
+             super.draw(gl);
+
+             SimpleBox box = new SimpleBox();
+             FloatBuffer mat_flash;
+             FloatBuffer mat_ambient;
+             FloatBuffer mat_flash_shiny;
+             FloatBuffer mat_diffuse;
+             float   mat_ambientf[]     = {0f, 1.0f, 0f, 1.0f};
+             float   mat_flashf[]       = {0f, 1.0f, 0f, 1.0f};
+             float   mat_diffusef[]       = {0f, 1.0f, 0f, 1.0f};
+             float   mat_flash_shinyf[] = {50.0f};
+
+             mat_ambient = GraphicsUtil.makeFloatBuffer(mat_ambientf);
+             mat_flash = GraphicsUtil.makeFloatBuffer(mat_flashf);
+             mat_flash_shiny = GraphicsUtil.makeFloatBuffer(mat_flash_shinyf);
+             mat_diffuse = GraphicsUtil.makeFloatBuffer(mat_diffusef);
+
+             gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_SPECULAR,mat_flash);
+             gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_SHININESS, mat_flash_shiny);
+             gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_DIFFUSE, mat_diffuse);
+             gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_AMBIENT, mat_ambient);
+
+             //draw cube
+             gl.glColor4f(0, 1.0f, 0, 1.0f);
+             gl.glTranslatef( 0.0f, 0.0f, 12.5f );
+
+             //draw the box
+             box.draw(gl);
+             */
         }
-
-        /**
-         * Everything drawn here will be drawn directly onto the marker,
-         * as the corresponding translation matrix will already be applied.
-        super.draw(gl);
-
-        SimpleBox box = new SimpleBox();
-        FloatBuffer mat_flash;
-        FloatBuffer mat_ambient;
-        FloatBuffer mat_flash_shiny;
-        FloatBuffer mat_diffuse;
-        float   mat_ambientf[]     = {0f, 1.0f, 0f, 1.0f};
-        float   mat_flashf[]       = {0f, 1.0f, 0f, 1.0f};
-        float   mat_diffusef[]       = {0f, 1.0f, 0f, 1.0f};
-        float   mat_flash_shinyf[] = {50.0f};
-
-        mat_ambient = GraphicsUtil.makeFloatBuffer(mat_ambientf);
-        mat_flash = GraphicsUtil.makeFloatBuffer(mat_flashf);
-        mat_flash_shiny = GraphicsUtil.makeFloatBuffer(mat_flash_shinyf);
-        mat_diffuse = GraphicsUtil.makeFloatBuffer(mat_diffusef);
-
-        gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_SPECULAR,mat_flash);
-        gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_SHININESS, mat_flash_shiny);
-        gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_DIFFUSE, mat_diffuse);
-        gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_AMBIENT, mat_ambient);
-
-        //draw cube
-        gl.glColor4f(0, 1.0f, 0, 1.0f);
-        gl.glTranslatef( 0.0f, 0.0f, 12.5f );
-
-        //draw the box
-        box.draw(gl);
-        */
     }
     @Override
     public void init(GL10 gl) {

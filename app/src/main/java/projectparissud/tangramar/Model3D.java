@@ -58,8 +58,8 @@ public class Model3D extends ARObject implements Serializable{
 			if(currGroup.isTextured()) {
 				texturedGroups.add(currGroup);
 			} else {
-				nonTexturedGroups.add(currGroup);
-			}			
+                nonTexturedGroups.add(currGroup);
+            }
 		}
 		this.texturedGroups = texturedGroups.toArray(new Group[texturedGroups.size()]);
 		this.nonTexturedGroups = nonTexturedGroups.toArray(new Group[nonTexturedGroups.size()]);	
