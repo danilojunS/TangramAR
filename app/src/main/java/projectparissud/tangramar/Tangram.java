@@ -23,14 +23,18 @@ public class Tangram {
     private PieceMarker reference;
 
     // Constructor
-    public Tangram(){
+    public Tangram(Model model){
         target = null;
 
         // Create the pieces
         pieces = new ArrayList<TangramPiece>();
         for(int i = 0; i < NUMBER_OF_PIECES; i++){
+            if(i == 6){
+                pieces.add(new TangramPiece(intToPieceName(i), null, false, intToPatternName(i), model));
+            }else{
+                pieces.add(new TangramPiece(intToPieceName(i), null, false, intToPatternName(i), null));
+            }
 
-            pieces.add(new TangramPiece(intToPieceName(i), null, false, intToPatternName(i), null));
         }
 
         reference = pieces.get(6).marker;
@@ -129,5 +133,17 @@ public class Tangram {
             isCorrectFigure = isCorrectFigure && piece.marker.isCorrectPose();
         }
         return isCorrectFigure;
+    }
+
+    public void setCorrectFigure() {
+        for(TangramPiece piece : pieces) {
+            piece.marker.setCorrectPoseInReferenceCS();
+        }
+    }
+
+    public void updatePoses() {
+        for(TangramPiece piece : pieces) {
+            piece.marker.updateCorrectPose();
+        }
     }
 }

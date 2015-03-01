@@ -1,16 +1,12 @@
 package projectparissud.tangramar;
 
 import android.support.v4.view.MotionEventCompat;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 
 import edu.dhbw.andar.ARToolkit;
@@ -21,24 +17,27 @@ import edu.dhbw.andar.exceptions.AndARException;
 public class MainActivity extends AndARActivity {
 
     private static final String DEBUG_TAG = "Debug";
+    public Tangram tangram;
 
     ARToolkit artoolkit;
 
     PieceMarker hiroMarker;
     PieceMarker refMarker;
 
-    // Init the tangram object and the pieces
-    Tangram tangram = new Tangram();
-    // TODO : init tangram figure model with loadObject()
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
 
+        // Init the tangram object and the pieces
+        tangram = new Tangram(loadObject("chair"));
+        // TODO : init tangram figure model with loadObject()
+
         try {
             artoolkit = super.getArtoolkit();
-            super.setNonARRenderer(new LightingRenderer());//or might be omited
+//            super.setNonARRenderer(new LightingRenderer());//or might be omited
 
             // reference marker
             //refMarker = new PieceMarker("reference", "android.patt", 76.0, new double[]{0,0});
@@ -69,20 +68,42 @@ public class MainActivity extends AndARActivity {
         finish();
     }
 
+    private boolean firstTouch = true;
     @Override
     public boolean onTouchEvent(MotionEvent event){
 
         int action = MotionEventCompat.getActionMasked(event);
 
         switch(action) {
-            case (MotionEvent.ACTION_DOWN) :
-            case (MotionEvent.ACTION_MOVE) :
+//            case (MotionEvent.ACTION_DOWN) :
+//                break;
+//            case (MotionEvent.ACTION_MOVE) :
+//                break;
             case (MotionEvent.ACTION_UP) :
-            case (MotionEvent.ACTION_CANCEL) :
-            case (MotionEvent.ACTION_OUTSIDE) :
                 // when the user touches the screen, we take a picture of the marker configuration
                 // that is, we save the current pose of the markers in the reference Coordinate System
-                tangram.printPiecesPositions();
+//                tangram.printPiecesPositions();
+                if (this.firstTouch) {
+                    tangram.setCorrectFigure();
+                    this.firstTouch = false;
+
+                } else {
+                    tangram.updatePoses();
+                    boolean isCorrect = tangram.isCorrectFigure();
+                    if (isCorrect) {
+                        System.out.println("Position ok !");
+                        tangram.pieces.get(6).marker.finalizeModel();
+                        tangram.pieces.get(6).marker.display = true;
+                    }
+                }
+//                this.firstTouch = this.firstTouch ? false : true;
+//                break;
+//            case (MotionEvent.ACTION_CANCEL) :
+//                break;
+//            case (MotionEvent.ACTION_OUTSIDE) :
+//                break;
+
+
             default :
                 return super.onTouchEvent(event);
         }
