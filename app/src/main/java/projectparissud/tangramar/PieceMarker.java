@@ -139,6 +139,8 @@ public class PieceMarker extends ARObject {
      */
     @Override
     public final void draw(GL10 gl) {
+        super.draw(gl);
+
         SimpleBox box = new SimpleBox();
         FloatBuffer mat_flash;
         FloatBuffer mat_ambient;
