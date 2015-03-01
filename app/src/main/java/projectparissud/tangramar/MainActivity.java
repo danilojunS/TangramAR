@@ -28,7 +28,7 @@ public class MainActivity extends AndARActivity {
     PieceMarker refMarker;
 
     // Init the tangram object and the pieces
-    //Tangram tangram = new Tangram();
+    Tangram tangram = new Tangram();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -46,7 +46,8 @@ public class MainActivity extends AndARActivity {
             //hiroMarker = new PieceMarker("test", "patt.hiro", 80.0, new double[]{0,0}, refMarker);
             //artoolkit.registerARObject(hiroMarker);
 
-            artoolkit.registerARObject(loadObject("android"));
+            //artoolkit.registerARObject(loadObject("chair"));
+            tangram.registerPieces(artoolkit);
 
 
         } catch (AndARException ex){
@@ -80,8 +81,7 @@ public class MainActivity extends AndARActivity {
             case (MotionEvent.ACTION_OUTSIDE) :
                 // when the user touches the screen, we take a picture of the marker configuration
                 // that is, we save the current pose of the markers in the reference Coordinate System
-                Log.d(DEBUG_TAG, "Taking a picture of the current marker configuration.");
-                this.hiroMarker.setCorrectPoseInReferenceCS();
+                tangram.printPiecesPositions();
             default :
                 return super.onTouchEvent(event);
         }
